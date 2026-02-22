@@ -5,7 +5,7 @@ set -e
 
 REPO="mechanical-advantage-ai/ma"
 BINARY="ma"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="$HOME/.ma/bin"
 
 detect_os() {
     os=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -36,6 +36,45 @@ get_latest_version() {
     curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
         grep '"tag_name"' |
         sed -E 's/.*"tag_name": *"([^"]+)".*/\1/'
+}
+
+add_to_path() {
+    path_entry='export PATH="$HOME/.ma/bin:$PATH"'
+
+    # Detect shell and rc file
+    case "$(basename "$SHELL")" in
+        zsh)  rc_file="$HOME/.zshrc" ;;
+        bash)
+            if [ -f "$HOME/.bashrc" ]; then
+                rc_file="$HOME/.bashrc"
+            else
+                rc_file="$HOME/.bash_profile"
+            fi
+            ;;
+        fish)
+            # Fish uses a different syntax
+            fish_path_cmd="fish_add_path $HOME/.ma/bin"
+            fish_config="$HOME/.config/fish/config.fish"
+            if [ -f "$fish_config" ] && grep -qF ".ma/bin" "$fish_config" 2>/dev/null; then
+                return
+            fi
+            mkdir -p "$(dirname "$fish_config")"
+            echo "$fish_path_cmd" >> "$fish_config"
+            echo "Added $INSTALL_DIR to PATH in $fish_config"
+            return
+            ;;
+        *)    rc_file="$HOME/.profile" ;;
+    esac
+
+    # Check if already in the rc file
+    if [ -f "$rc_file" ] && grep -qF ".ma/bin" "$rc_file" 2>/dev/null; then
+        return
+    fi
+
+    echo "" >> "$rc_file"
+    echo "# Added by ma CLI installer" >> "$rc_file"
+    echo "$path_entry" >> "$rc_file"
+    echo "Added $INSTALL_DIR to PATH in $rc_file"
 }
 
 main() {
@@ -75,16 +114,25 @@ main() {
     fi
 
     # Install binary
-    if [ -w "$INSTALL_DIR" ]; then
-        cp "${tmp_dir}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
-        chmod +x "${INSTALL_DIR}/${BINARY}"
-    else
-        echo "Requesting sudo to install to ${INSTALL_DIR}..."
-        sudo cp "${tmp_dir}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
-        sudo chmod +x "${INSTALL_DIR}/${BINARY}"
-    fi
+    mkdir -p "$INSTALL_DIR"
+    cp "${tmp_dir}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
+    chmod +x "${INSTALL_DIR}/${BINARY}"
 
-    echo "ma ${version} installed successfully! Run 'ma --help' to get started."
+    # Add to PATH if needed
+    case ":$PATH:" in
+        *":$INSTALL_DIR:"*) ;;
+        *) add_to_path ;;
+    esac
+
+    echo ""
+    echo "ma ${version} installed successfully to ${INSTALL_DIR}/${BINARY}"
+    echo ""
+    if ! command -v ma >/dev/null 2>&1; then
+        echo "Restart your shell or run:"
+        echo "  export PATH=\"\$HOME/.ma/bin:\$PATH\""
+        echo ""
+    fi
+    echo "Run 'ma --help' to get started."
 }
 
 main
