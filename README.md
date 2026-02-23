@@ -1,4 +1,4 @@
-# MA CLI
+# Mechanical Advantage Command-line Interface
 
 The command-line interface for [Mechanical Advantage](https://mechanical-advantage.ai).
 
@@ -9,12 +9,6 @@ curl -fsSL https://raw.githubusercontent.com/mechanical-advantage-ai/ma/main/ins
 ```
 
 This installs the `ma` binary to `~/.ma/bin` and adds it to your PATH. Restart your shell after installation.
-
-To install a specific version:
-
-```sh
-MA_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/mechanical-advantage-ai/ma/main/install.sh | sh
-```
 
 ## Supported platforms
 
