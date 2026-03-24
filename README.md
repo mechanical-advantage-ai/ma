@@ -1,6 +1,6 @@
-# Mechanical Advantage Command-line Interface
+# Mechanical Advantage CLI Toolkit
 
-The command-line interface for [Mechanical Advantage](https://mechanical-advantage.ai).
+The agent-first CLI toolkit for [Mechanical Advantage](https://mechanical-advantage.ai). Every outbound action queues for human approval — the agent proposes, the human decides.
 
 ## Install
 
